@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:whatsapp2/cadastro.dart';
 import 'package:whatsapp2/home.dart';
 import 'package:whatsapp2/model/usuario.dart';
+import 'package:whatsapp2/routes/routeGenerator.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -55,12 +56,7 @@ class _LoginState extends State<Login> {
         email: usuario.email,
         password: usuario.senha
     ).then((UserCredential userCredential){
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => Home()
-          )
-      );
+      Navigator.pushReplacementNamed(context, Routes.home);
     }).catchError((){
       setState(() {
         _mensagemErro = "Erro ao entrar";
@@ -72,16 +68,9 @@ class _LoginState extends State<Login> {
   Future _verificarUsuarioLogado() async{
 
     FirebaseAuth auth = FirebaseAuth.instance;
-    // auth.signOut();
-
     User? usuarioLogado = await auth.currentUser;
     if(usuarioLogado != null){
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => Home()
-          )
-      );
+      Navigator.pushReplacementNamed(context, Routes.home);
     }
 
   }
@@ -172,12 +161,7 @@ class _LoginState extends State<Login> {
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                     onTap: (){
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => Cadastro()
-                          )
-                      );
+                      Navigator.pushNamed(context, Routes.cadastro);
                     },
                   ),
                 ),

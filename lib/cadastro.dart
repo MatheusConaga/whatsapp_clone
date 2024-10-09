@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:whatsapp2/login.dart';
 import 'package:whatsapp2/model/usuario.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:whatsapp2/routes/routeGenerator.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
@@ -76,12 +77,7 @@ class _CadastroState extends State<Cadastro> {
         usuario.toMap()
         );
 
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => Login()
-            )
-        );
+        Navigator.pushNamedAndRemoveUntil(context, Routes.login, (_) => false);
 
       }).catchError((erro){
 

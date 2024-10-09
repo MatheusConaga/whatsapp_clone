@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:whatsapp2/home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:whatsapp2/login.dart';
+import 'package:whatsapp2/routes/routeGenerator.dart';
 
 void main () async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,5 +12,7 @@ void main () async{
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     home: Login(),
+    initialRoute: "/",
+    onGenerateRoute: RouteGenerator.generateRoute,
   ));
 }
