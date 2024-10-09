@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "904878903846",
+    "project_id": "whatsapp-ef80a",
+    "storage_bucket": "whatsapp-ef80a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:904878903846:android:abcf81f517c3baf8fecce7",
+        "android_client_info": {
+          "package_name": "com.example.whatsapp2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOw0gy_4SD06yYrXiBRPo4gLXfMHIw--w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
