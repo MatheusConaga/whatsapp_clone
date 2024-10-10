@@ -53,7 +53,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 
     switch ( itemEscolhido ){
       case "Configurações":
-        print("Configurações");
+        Navigator.pushNamed(context, Routes.configuracoes);
         break;
       case "Deslogar":
         _deslogarUsuario();
@@ -68,8 +68,6 @@ _deslogarUsuario() async{
   Navigator.pushNamedAndRemoveUntil(context, Routes.login, (_) => false);
 
 }
-
-
 
   @override
   Widget build(BuildContext context) {

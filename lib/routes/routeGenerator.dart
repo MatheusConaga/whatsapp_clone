@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:whatsapp2/cadastro.dart';
+import 'package:whatsapp2/configuracoes.dart';
 import 'package:whatsapp2/home.dart';
 import 'package:whatsapp2/login.dart';
 
@@ -12,28 +13,30 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => Cadastro());
       case Routes.home:
         return MaterialPageRoute(builder: (_) => Home());
+      case Routes.configuracoes:
+        return MaterialPageRoute(builder: (_) => Configuracoes());
       default:
         return _erroRota();
     }
   }
 
-  static Route<dynamic> _erroRota(){
-    return MaterialPageRoute(builder: (context){
+  static Route<dynamic> _erroRota() {
+    return MaterialPageRoute(builder: (context) {
       return Scaffold(
-        appBar: AppBar(title: Text("Tela nao encontrada!"),),
+        appBar: AppBar(
+          title: Text("Tela nao encontrada!"),
+        ),
         body: Center(
           child: Text("Tela não encontrada!"),
         ),
       );
     });
   }
-
 }
 
-class Routes{
-
+class Routes {
   static const String login = "/";
   static const String cadastro = "/cadastro";
   static const String home = "/home";
-
+  static const String configuracoes = "/configuracoes";
 }
