@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:whatsapp2/model/conversa.dart';
-
+import 'package:whatsapp2/model/usuario.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whatsapp2/routes/routeGenerator.dart';
 
 class Contatos extends StatefulWidget {
   const Contatos({super.key});
@@ -10,56 +13,96 @@ class Contatos extends StatefulWidget {
 }
 
 class _ContatosState extends State<Contatos> {
+  String _idUsuarioLogado = "";
+  String _emailUsuarioLogado = "";
 
-  List<Conversa> listaConversa = [
-    Conversa(
-        "Mariana",
-        "Ei puta",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-ef80a.appspot.com/o/perfil%2Fperfil1.jpg?alt=media&token=c8b70a04-6066-44d3-a85a-8bb671740de7"
-    ),
-    Conversa(
-        "Jorjino",
-        "Eae caba",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-ef80a.appspot.com/o/perfil%2Fperfil4.jpg?alt=media&token=539a498b-0dc4-401c-a324-182eb72a3bde"
-    ),
-    Conversa(
-        "Dona Florinda",
-        "Oi neto querido",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-ef80a.appspot.com/o/perfil%2Fperfil3.jpg?alt=media&token=c794ca8c-b431-406d-8ad2-1750903accb6"
-    ),
-    Conversa(
-        "Jorjeno",
-        "Vamo pra lá?",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-ef80a.appspot.com/o/perfil%2Fperfil2.jpg?alt=media&token=d3ba07e5-2a3d-4859-a76b-521e8f3d8337"
-    ),
-  ];
+  Future<List<Usuario>> _recuperarContatos() async {
+    FirebaseFirestore db = FirebaseFirestore.instance;
 
+    QuerySnapshot querySnapshot = await db.collection("usuarios").get();
+
+    List<Usuario> listaUsuarios = [];
+    for (DocumentSnapshot item in querySnapshot.docs) {
+      var dados = item.data() as Map<String, dynamic>?;
+      if (dados != null) {
+        if ( dados["email"] == _emailUsuarioLogado ) continue;
+        Usuario usuario = Usuario();
+        usuario.idUsuario = item.id;
+        usuario.email = dados["email"] ?? "";
+        usuario.nome = dados["nome"] ?? "";
+        usuario.urlImagem = dados["urlImagem"] ?? "";
+
+        listaUsuarios.add(usuario);
+      } else {
+        print("Dados do documento são null para o documento: ${item.id}");
+      }
+    }
+    return listaUsuarios;
+  }
+
+  Future _recuperarDadosUsuario() async{
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? usuarioLogado = await auth.currentUser;
+
+    if (usuarioLogado != null){
+      _idUsuarioLogado = usuarioLogado.uid;
+      _emailUsuarioLogado = usuarioLogado.email ?? "";
+    }
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _recuperarDadosUsuario();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: listaConversa.length,
-        itemBuilder: (context, index){
-
-          Conversa conversa = listaConversa[index];
-
-          return ListTile(
-            contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            leading: CircleAvatar(
-              maxRadius: 30,
-              backgroundColor: Colors.grey,
-              backgroundImage: NetworkImage( conversa.caminhoFoto ),
-            ),
-            title: Text(
-              conversa.nome,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16
-              ),
+    return FutureBuilder<List<Usuario>>(
+      future: _recuperarContatos(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // Centraliza o conteúdo
+              children: [
+                Text("Carregando contatos"),
+                CircularProgressIndicator()
+              ],
             ),
           );
-
+        } else if (snapshot.hasError) {
+          return Center(child: Text("Erro ao carregar contatos: ${snapshot.error}"));
+        } else if (snapshot.hasData) {
+          List<Usuario> listaItens = snapshot.data!;
+          return ListView.builder(
+            itemCount: listaItens.length,
+            itemBuilder: (_, index) {
+              Usuario usuario = listaItens[index];
+              return ListTile(
+                onTap: (){
+                  Navigator.pushNamed(context, Routes.mensagens, arguments: usuario);
+                },
+                contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                leading: CircleAvatar(
+                  maxRadius: 30,
+                  backgroundColor: Colors.grey,
+                  backgroundImage: usuario.urlImagem != null
+                      ? NetworkImage(usuario.urlImagem) // Corrigido aqui
+                      : null,
+                ),
+                title: Text(
+                  usuario.nome,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              );
+            },
+          );
+        } else {
+          return Center(child: Text("Nenhum contato encontrado"));
         }
+      },
     );
   }
 }
