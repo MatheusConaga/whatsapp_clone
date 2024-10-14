@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:whatsapp2/model/conversa.dart';
 import 'dart:io';
 import 'package:whatsapp2/model/mensagem.dart';
 import 'package:whatsapp2/model/usuario.dart';
@@ -6,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:async';
 
 class Mensagens extends StatefulWidget {
   final Usuario contato;
@@ -18,12 +21,14 @@ class Mensagens extends StatefulWidget {
 
 class _MensagensState extends State<Mensagens> {
 
-
   bool _subindoImagem = false;
   String _idUsuarioLogado = "";
   String _idUsuarioDestinatario = "";
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseFirestore db = FirebaseFirestore.instance;
+  final _controller = StreamController<QuerySnapshot>.broadcast();
+  ScrollController _scrollController = ScrollController();
+
 
   TextEditingController _controllerMensagem = TextEditingController();
 
@@ -42,7 +47,34 @@ class _MensagensState extends State<Mensagens> {
       // Salvar mensagem pro destinatario
       _salvarMensagem(_idUsuarioDestinatario, _idUsuarioLogado, mensagem);
 
+      _salvarConversa( mensagem );
+
     }
+  }
+
+  _salvarConversa( Mensagem msg ){
+
+    // Salvar conversa remetente
+    Conversa cRemetente = Conversa();
+    cRemetente.idRemetente = _idUsuarioLogado;
+    cRemetente.idDestinatario = _idUsuarioDestinatario;
+    cRemetente.mensagem = msg.mensagem;
+    cRemetente.nome = widget.contato.nome;
+    cRemetente.caminhoFoto = widget.contato.urlImagem;
+    cRemetente.tipoMensagem = msg.tipo;
+    cRemetente.salvar();
+
+    // Salvar conversa destinatario
+    Conversa cDestinatario = Conversa();
+    cDestinatario.idRemetente = _idUsuarioDestinatario;
+    cDestinatario.idDestinatario = _idUsuarioLogado;
+    cDestinatario.mensagem = msg.mensagem;
+    cDestinatario.nome = widget.contato.nome;
+    cDestinatario.caminhoFoto = widget.contato.urlImagem;
+    cDestinatario.tipoMensagem = msg.tipo;
+    cDestinatario.salvar();
+
+
   }
 
   _salvarMensagem(
@@ -116,8 +148,29 @@ class _MensagensState extends State<Mensagens> {
       setState(() {
         _idUsuarioLogado = usuarioLogado.uid;
         _idUsuarioDestinatario = widget.contato.idUsuario;
+        _adicionarListenerMensagens();
       });
     }
+  }
+
+  Stream <QuerySnapshot> _adicionarListenerMensagens(){
+
+    final stream = db
+        .collection("mensagens")
+        .doc(_idUsuarioLogado)
+        .collection(_idUsuarioDestinatario)
+        .orderBy("timestamp")
+        .snapshots();
+
+    stream.listen((dados){
+      _controller.add(dados);
+      Timer(Duration(seconds: 1), (){
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      });
+    });
+
+    return stream;
+
   }
 
   @override
@@ -125,6 +178,7 @@ class _MensagensState extends State<Mensagens> {
     _recuperarDadosUsuario();
     super.initState();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -173,12 +227,7 @@ class _MensagensState extends State<Mensagens> {
     );
 
     var streamMensagens = StreamBuilder(
-      stream: db
-          .collection("mensagens")
-          .doc(_idUsuarioLogado)
-          .collection(_idUsuarioDestinatario)
-          .orderBy("timestamp")
-          .snapshots(),
+      stream: _controller.stream,
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
@@ -204,6 +253,7 @@ class _MensagensState extends State<Mensagens> {
 
         return Expanded(
           child: ListView.builder(
+              controller: _scrollController,
               itemCount: mensagens.length,
               itemBuilder: (context, index) {
                 DocumentSnapshot item = mensagens[index];
